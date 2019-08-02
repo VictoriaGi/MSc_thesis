@@ -1,0 +1,180 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+install.packages("maxlike")
+install.packages("rich")
+install.packages("betapart")
+install.packages("rgbif")
+install.packages("bdvis")
+library(maxlike)
+library(dplyr)
+library(tidyverse)
+library(rich)
+library(betapart)
+library(rgbif)
+library(bdvis)
+```
+
+```{r}
+data(carw)
+```
+
+```{r}
+#convert data.frame to a list of rasters
+rl <- lapply (carw.data$raster.data, function(x){
+  m <- matrix(x, nrow = carw.data$dim[1], ncol = carw.data$dim[2],
+              byrow = TRUE)
+  r <- raster(m)
+  extent(r) <- carw.data$ext
+  r
+})
+# Stack and name them
+rs <- stack(rl[[1]], rl[[2]], rl[[3]], rl[[4]], rl[[5]], rl[[6]])
+names(rs) <- names(carw.data$raster.data)
+
+plot(rs)
+```
+
+```{r}
+med <- read.csv("../Data/New_med_list.csv")
+med
+str(med)
+summary(med)
+
+
+med %>% select(Currentname, Order, Currentname) %>% 
+  filter(Order == "Nostocales")
+
+unique(med$Family)
+
+unique_taxa_per_genus <- med %>% select(Order, Genustotal, Currentname,Isolationsource) %>% 
+  filter(Currentname != " ") %>% 
+  group_by(Order, Genustotal) %>% 
+  summarise(Taxa = n_distinct(Currentname))
+unique_taxa_per_genus
+
+```
+
+# Select only observations containing Lake, River and Reservoir
+
+```{r}
+filter_lake <- med %>% select(Order, Currentname, Isolationsource) %>% 
+   filter_all(any_vars(str_detect(., pattern = "Lake")))
+
+filter_river <- med %>% select(Order, Currentname, Isolationsource) %>% 
+   filter_all(any_vars(str_detect(., pattern = "River")))
+
+filter_reservoir <- med %>% select(Order, Currentname, Isolationsource) %>% 
+   filter_all(any_vars(str_detect(., pattern = "Reservoir")))
+
+c <- rbind(filter_lake,filter_reservoir,filter_river)
+
+
+```
+
+```{r}
+glimpse(med)
+```
+
+```{r}
+medi_tidy <- med %>% 
+  select(Country, Isolationsource, Currentname, Year) %>% 
+  filter(Currentname != "")
+medi_tidy
+
+medi_matrix <- data.matrix(medi_tidy)
+data(medi_matrix)
+test <- rich(matrix = medi_matrix, nrandom = 50, verbose = TRUE)
+```
+
+#find beta diversity comparing countries with presence-absence 
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+group_country <- med %>% select(Country, Currentname) %>% 
+  filter (Currentname != "") %>% 
+  group_by(Country, Currentname) %>% 
+  summarize(Number_records = n())
+group_country
+
+str(group_country)
+fix(group_data)
+class(group_country$Number_records)
+apply(group_country, 2, class)
+class(group_country$Number_records)
+
+#Make the data wider with spread function
+group_country_sp <- group_country %>% 
+  spread(Currentname, Number_records, fill = 0, convert = FALSE, sep = NULL)
+group_country_sp
+
+#Find beta diversity
+group_country_sp_PA <- group_country_sp
+group_country_sp_PA[group_country_sp_PA >= 2] <- 1
+
+#Beta diversity
+beta_res <- betapart.core(group_country_sp_PA[,-1])
+beta_res
+
+apply(group_country_sp, 2, class)
+str(group_country_sp)
+
+group_country_num <- as.numeric(group_country$Number_records)
+
+group_country_num <- as.numeric(as.character(group_country$Number_records))
+
+#Convert NAs to 0 with your own function
+medi_zero <- function(column_with_nas){
+  column_with_nas[is.na(column_with_nas)] <- 0
+  return (column_with_nas)
+}
+medi_zero(group_country$Number_records)
+
+
+
+
+
+library(plyr)
+group_country_rich<- ddply(group_country, ~Country, function(x){
+  data.frame(richness = sum(group_country[,-1] > 0))
+})
+class(group_country)
+#Unload a package
+detach(package : plyr, unload = TRUE)
+
+```
+
+#find beta diversity between different Isolationsources presence-absence
+
+```{r}
+habitat_pa <- med %>% select(Isolationsource, Currentname) %>% 
+  filter (Currentname != "") %>% 
+  group_by(Isolationsource, Currentname) %>% 
+  summarize(Number_records = n())
+habitat_pa
+
+#Make the data wider with spread function
+habitat_pa_spread <- habitat_pa %>% 
+  spread(Currentname, Number_records, fill = 0, convert = FALSE, sep = NULL)
+habitat_pa_spread
+
+#Find beta diversity
+habitat_pa_spread_new <- habitat_pa_spread
+habitat_pa_spread_new[habitat_pa_spread_new >= 2] <- 1
+
+#Beta diversity
+library(betapart)
+beta_isola <- betapart.core(habitat_pa_spread_new[,-1])
+beta_isola
+```
+
+
+
+

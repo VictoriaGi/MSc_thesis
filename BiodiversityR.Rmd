@@ -1,0 +1,19 @@
+---
+title: "Package_Biodiversity"
+output: html_notebook
+---
+
+. 
+
+```{r}
+install.packages("BiodiversityR")
+library(vegan)
+library(BiodiversityR)
+
+```
+
+```{r}
+data(dune.env)
+crosstabanalysis(dune.env, "Manure", "Management")
+```
+

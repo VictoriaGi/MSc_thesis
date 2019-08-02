@@ -1,0 +1,100 @@
+---
+title: "Beta_diversity"
+output: html_notebook
+---
+
+
+
+```{r}
+med <- read.csv("../Data/New_med_list.csv")
+med
+glimpse(med)
+
+```
+
+# Select only habitat Pond and spread function
+
+```{r}
+pondbeta <- med %>%  select(Currentname, Isolationsource) %>% 
+  filter_all(any_vars(str_detect(., pattern = "Pond"))) %>% 
+  group_by(Isolationsource, Currentname) %>% 
+  summarise(N = n()) %>% 
+  spread(Currentname, N, fill = 0, convert = FALSE, sep = NULL) 
+
+#beta diversity
+library(betapart)
+  
+pondbetapart <- pondbeta
+pondbetapart[pondbetapart >= 1] <- 1
+pondbetapart <- betapart.core(pondbetapart[, -1])
+pondbetapart
+
+
+
+```
+
+# Alpha diversity of habitat pond
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+pondspr<- med %>%  select(Currentname, Isolationsource) %>% 
+  filter_all(any_vars(str_detect(., pattern = "Pond"))) %>% 
+  group_by(Isolationsource, Currentname) %>% 
+  summarise(N = n()) %>% 
+  spread(Isolationsource, N, fill = 0, convert = FALSE, sep = NULL)
+pondspr
+
+apply(pondspr[, -1] > 0, 2, sum)
+```
+
+# Menhinick's index is simply the number of species (n) divided by the square-root of the total number of individuals (N).   D=n/√N
+
+```{r}
+n <- apply(pondspr[, -1]>0, 2, sum)
+N <- apply(pondspr[, -1]>0, 2, sum)
+Mehi <- n/sqrt(N)
+Mehi
+```
+
+#Margalef's index is the number of species (n) minus 1 divided by the natural logarithm of the total number of individuals (N). D= (n−1)log(N)
+
+```{r}
+n <- apply(pondspr[, -1]>0, 2, sum)
+N <- apply(pondspr[,-1]>0, 2, sum)
+Margal <- (n-1)/log(N)
+Margal
+```
+
+```{r}
+library(vegan)
+library(dplyr)
+med 
+country_spe <- med %>% 
+  select(Country, Currentname) %>% 
+  group_by(Country, Currentname) %>% 
+  summarize(N = n()) %>% 
+  arrange(desc(N))
+country_spe
+
+empty_cols <- colSums(country_spe == " ") == nrow(country_spe)
+empty_cols
+
+
+
+
+```
+
+
+```{r}
+lake_species <- med %>% select(Currentname, Country, Isolationsource) %>% 
+  filter_all(any_vars(str_detect(., pattern = "Lake"))) %>% 
+  group_by(Isolationsource) %>% 
+  summarise(N = n()) %>% 
+  arrange(desc(N))
+lake_species <- head(lake_species, 10) %>% spread(Currentname, N, full = 0, convert = FALSE, sep = NULL)
+
+```
+
+
