@@ -1,0 +1,31 @@
+---
+title: "PresenceAbsence"
+output: html_notebook
+---
+
+
+
+```{r}
+install.packages("PresenceAbsence")
+library(PresenceAbsence)
+```
+
+```{r}
+med <- read.csv("../Data/New_med_list.csv")
+```
+
+```{r}
+species <- as.character(unique(med$Currentname))
+model.names <- as.character(names(med[-c(1:5, 7:17)]))
+N.models <- ncol(med) -16
+N.sp <- length(species)
+N.obs <- length(med$Currentname[med$Currentname == species[1]])
+Ovs.prev
+N.obs
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

@@ -1,0 +1,52 @@
+---
+title: "α-diveristy"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+taxa_isol <- med %>% 
+  select(Order, Isolationsource, Currentname) %>% 
+  filter(Isolationsource != "") %>% 
+  group_by(Isolationsource) %>% 
+  summarize(Number_taxa = n(), Taxa_percent = (Number_taxa/604) * 100) %>% 
+  arrange(desc(Number_taxa))
+```
+
+```{r}
+med <- read.csv("../Data/New_med_list.csv")
+```
+
+#Build a treemap for each Country
+
+```{r}
+library(bdvis)
+
+s <- split(med, med$Country)
+
+taxtree <- med %>% 
+  select(Order, Family, Genustotal, Country) %>% 
+  filter(Order != " ") 
+
+tmtu <- taxotree(taxtree, title = "Treemap Turkey", legend = "Number of Families in Turkey", sum1 = "Family", sum2 = "Genustotal")
+
+taxtree <- med %>% 
+  select(Order, Family, Genustotal, Country) %>% 
+  filter(Country == "Egypt") %>% 
+  taxotree(n = 30, title = "Treemap Egypt Turkey", legend = "Number of Families in Egypt", sum1 = "Family", sum2 = "Genustotal")
+
+taxtree <- med %>% 
+  select(Order, Family, Genustotal, Country) %>% 
+  filter(Country == "Greece") %>% 
+  taxotree(n = 30, title = "Treemap Greece", legend = "Number of Families in Greece", sum1 = "Family", sum2 = "Genustotal")
+
+
+
+```
+
+```{r}
+
+```
+
+
+
