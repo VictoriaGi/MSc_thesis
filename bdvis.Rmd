@@ -40,8 +40,37 @@ taxtree <- med %>%
   filter(Country == "Greece") %>% 
   taxotree(n = 30, title = "Treemap Greece", legend = "Number of Families in Greece", sum1 = "Family", sum2 = "Genustotal")
 
+```
+
+```{r}
+ord <- med %>% select(Order, Family, Genustotal) %>% 
+  filter(Order != " ") %>% 
+  group_by(Order, Family, Genustotal) %>% 
+  summarize(N = n(), Percent = N/4828*100)
+ord <- ord[-c(1:2),]
+ord
 
 
+tr <- taxotree(ord, n = 30, title = "Order records", sum1 = "Family", sum2 = "Genustotal")
+  
+
+```
+
+```{r}
+format_bdvis(med, source = NULL, config = NULL, quiet = FALSE, gettaxo = TRUE)
+bdsummary(med)
+
+colnames(med)
+
+#Rename column where name is Currentname
+names(med)[names(med) == "Currentname"] <- "Scientific_name"
+med
+#Convert variable Scientific_name to character
+med$Scientific_name <- as.character(med$Scientific_name)
+class(med$Scientific_name)
+
+#Retrieve higher taxonomy information for each record from EOL
+gettaxo(med, genus = FALSE, verbose = TRUE, progress = TRUE)
 ```
 
 ```{r}
